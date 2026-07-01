@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
@@ -197,7 +197,7 @@
         .story-nav-area { position: absolute; inset: 0; display: flex; z-index: 4000; }
         .story-nav-area div { flex: 1; cursor: pointer; }
 
-        /* ЭКРАН ЗВОНКА И ВИДЕО */
+        /* ЭКРАН ЗВОНКА И ВИДЕОСВЯЗИ */
         #callOverlay { z-index: 9000; background: rgba(0,0,0,0.95); flex-direction: column; justify-content: center; align-items: center; text-align: center; position: fixed; inset: 0; }
         .call-pulse { animation: callPulse 1.5s infinite; border: 4px solid var(--p); margin: 0 auto 20px; }
         @keyframes callPulse { 0% { box-shadow: 0 0 0 0 rgba(0, 122, 255, 0.7); } 70% { box-shadow: 0 0 0 30px rgba(0, 122, 255, 0); } 100% { box-shadow: 0 0 0 0 rgba(0, 122, 255, 0); } }
@@ -207,7 +207,7 @@
         .call-btn:active { transform: scale(0.9); }
         .btn-accept { background: var(--online); }
         .btn-decline { background: var(--red); }
-        .btn-toggle-active { background: var(--red); } /* Для выключенного микрофона/камеры */
+        .btn-toggle-active { background: var(--red); }
         
         #remoteVideo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: -2; opacity: 0.4; transition: opacity 0.3s; }
         #remoteVideo.active-video { opacity: 1; }
@@ -217,6 +217,10 @@
     </style>
 </head>
 <body>
+
+<!-- АУДИО РИНГТОНЫ (Скрытые) -->
+<audio id="incomingRingtone" loop src="https://upload.wikimedia.org/wikipedia/commons/c/c4/Telephone_ringing.ogg"></audio>
+<audio id="outgoingRingtone" loop src="https://upload.wikimedia.org/wikipedia/commons/f/fc/Ringback_tone_%28North_America%29.ogg"></audio>
 
 <div id="loader">
     <div class="spinner"></div>
@@ -444,6 +448,10 @@
     firebase.initializeApp(firebaseConfig);
     const rtdb = firebase.database();
     
+    // Глобальные объекты аудио для рингтонов
+    const inRing = document.getElementById('incomingRingtone');
+    const outRing = document.getElementById('outgoingRingtone');
+    
     const ensureArray = (data) => {
         if (data === null || data === undefined) return [];
         if (Array.isArray(data)) return data;
@@ -518,12 +526,11 @@
                 if (activeChat) { 
                     const freshChat = db.chats.find(c => c.id === activeChat.id);
                     if (freshChat) {
-                        // Только обновляем сообщения, если их количество или ID изменилось
                         if (!activeChat.msgs || activeChat.msgs.length !== freshChat.msgs.length) {
                             activeChat = freshChat;
                             renderMsgs(); 
                         } else {
-                            activeChat = freshChat; // Тихо обновляем
+                            activeChat = freshChat; 
                         }
                     }
                 }
@@ -541,15 +548,11 @@
         alert("Ошибка подключения к серверу: " + error.message);
     });
 
-    // 🚀 ИСПРАВЛЕНО: Теперь таймер не стирает чаты и звонки!
     function updateLastSeen() { 
         if (me && isDbReady) { 
             me.lastSeen = Date.now(); 
             const uIdx = db.users.findIndex(u => u.id === me.id);
-            if (uIdx > -1) {
-                // Обновляем ТОЛЬКО время пользователя на сервере, не трогая чужие чаты!
-                rtdb.ref(`/dg_app_data/users/${uIdx}/lastSeen`).set(me.lastSeen).catch(console.error);
-            }
+            if (uIdx > -1) rtdb.ref(`/dg_app_data/users/${uIdx}/lastSeen`).set(me.lastSeen).catch(console.error);
         } 
     }
     setInterval(updateLastSeen, 60000);
@@ -592,7 +595,6 @@
         else { element.innerHTML = '?'; }
     }
 
-    // 🚀 ИСПРАВЛЕНА ЗАГРУЗКА МУЗЫКИ:
     async function uploadToCloud(file) {
         document.getElementById('loader').style.display = 'flex';
         const loaderText = document.querySelector('#loader div:nth-child(2)');
@@ -605,8 +607,8 @@
         let resType = 'auto';
         const type = getFileType(file);
         if (type === 'image') resType = 'image';
-        else if (type === 'video' || type === 'audio') resType = 'video'; // Аудио в Cloudinary загружается через video API
-        else resType = 'raw'; // Для документов
+        else if (type === 'video' || type === 'audio') resType = 'video'; 
+        else resType = 'raw'; 
 
         try {
             const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/${resType}/upload`, {
@@ -628,7 +630,7 @@
     }
 
     // ======================================================================
-    // 📞 ЛОГИКА ЗВОНКОВ С ВИДЕО И ГРОМКОЙ СВЯЗЬЮ
+    // 📞 ЛОГИКА ЗВОНКОВ (СО ЗВУКАМИ)
     // ======================================================================
     function listenForIncomingCalls() {
         if (!me) return;
@@ -658,13 +660,15 @@
         document.getElementById('callControlsActive').style.display = 'none';
         document.getElementById('callOverlay').classList.add('active');
         
-        // Сброс кнопок и видео
         isCallMicMuted = false;
         isCallCamOff = false;
         document.getElementById('btnToggleMic').classList.remove('btn-toggle-active');
         document.getElementById('btnToggleCam').classList.remove('btn-toggle-active');
         document.getElementById('localVideo').style.display = 'none';
         document.getElementById('remoteVideo').classList.remove('active-video');
+        
+        // Включаем рингтон
+        inRing.play().catch(e => console.warn('Автовоспроизведение заблокировано', e));
     }
 
     function hideCallUI() {
@@ -673,15 +677,17 @@
         document.getElementById('remoteVideo').classList.remove('active-video');
         document.getElementById('remoteVideo').srcObject = null;
         document.getElementById('remoteAudio').srcObject = null;
-        document.getElementById('callUiTop').style.display = 'block'; // Возвращаем аватарку
+        document.getElementById('callUiTop').style.display = 'block'; 
+        
+        // Выключаем звуки
+        inRing.pause(); inRing.currentTime = 0;
+        outRing.pause(); outRing.currentTime = 0;
     }
 
-    // 🚀 НОВАЯ ФУНКЦИЯ ДЛЯ МОМЕНТАЛЬНОЙ ОТПРАВКИ СООБЩЕНИЙ В ЧАТ
     function pushMessageToDb(targetUserId, msgObj) {
         const chatIndex = db.chats.findIndex(c => c.type === 'direct' && ((c.u1 === me.id && c.u2 === targetUserId) || (c.u2 === me.id && c.u1 === targetUserId)));
         if (chatIndex > -1) {
             db.chats[chatIndex].msgs.push(msgObj);
-            // Пишем ТОЛЬКО в нужный чат, не перетирая всю базу!
             rtdb.ref(`/dg_app_data/chats/${chatIndex}/msgs`).set(db.chats[chatIndex].msgs);
             if (activeChat && activeChat.id === db.chats[chatIndex].id) renderMsgs();
         }
@@ -706,6 +712,9 @@
         isCallCamOff = !isVideo;
         updateCallButtons();
 
+        // Включаем гудки вызова
+        outRing.play().catch(e => console.warn('Автовоспроизведение заблокировано', e));
+
         try {
             localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: isVideo });
             if (isVideo) {
@@ -722,7 +731,7 @@
                     const rVid = document.getElementById('remoteVideo');
                     rVid.srcObject = event.streams[0];
                     rVid.classList.add('active-video');
-                    document.getElementById('callUiTop').style.display = 'none'; // Прячем аватарку, если есть видео
+                    document.getElementById('callUiTop').style.display = 'none'; 
                 } else {
                     document.getElementById('remoteAudio').srcObject = event.streams[0]; 
                 }
@@ -748,21 +757,24 @@
                 const data = snap.val();
                 if (!data) return cleanupCall();
                 
-                if (data.status === 'ended' || data.status === 'declined') {
-                    cleanupCall();
-                    let msgTxt = data.status === 'declined' ? '⛔ Вызов отклонен' : '📞 Звонок завершен';
-                    alert(data.status === 'declined' ? 'Абонент отклонил вызов' : 'Звонок завершен');
-                    pushMessageToDb(data.callee, { uid: me.id, type: 'system_call', txt: msgTxt, time: Date.now(), reactions: {} });
-                }
-                if (data.answer && peerConnection.signalingState === 'have-local-offer') {
-                    peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
+                if (data.status === 'connected') {
+                    // Трубку взяли - вырубаем гудки
+                    outRing.pause(); outRing.currentTime = 0;
                     document.getElementById('callStatus').textContent = 'Разговор (0:00)';
                     startCallTimer();
+                } else if (data.status === 'ended' || data.status === 'declined') {
+                    cleanupCall();
+                    let msgTxt = data.status === 'declined' ? '⛔ Вызов отклонен' : '📞 Звонок завершен';
+                    pushMessageToDb(data.callee, { uid: me.id, type: 'system_call', txt: msgTxt, time: Date.now(), reactions: {} });
+                }
+                
+                if (data.answer && peerConnection && peerConnection.signalingState === 'have-local-offer') {
+                    peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
                 }
             });
 
             rtdb.ref(`/dg_calls/${currentCallId}/calleeIce`).on('child_added', snap => {
-                if (snap.val()) peerConnection.addIceCandidate(new RTCIceCandidate(snap.val()));
+                if (snap.val() && peerConnection) peerConnection.addIceCandidate(new RTCIceCandidate(snap.val()));
             });
 
         } catch (e) {
@@ -773,8 +785,11 @@
 
     async function acceptCall(isVideo) {
         if (!currentCallId) return;
-        document.getElementById('callStatus').textContent = 'Соединение...';
         
+        // Выключаем рингтон
+        inRing.pause(); inRing.currentTime = 0;
+        
+        document.getElementById('callStatus').textContent = 'Соединение...';
         document.getElementById('callControlsIncoming').style.display = 'none';
         document.getElementById('callControlsActive').style.display = 'flex';
 
@@ -821,7 +836,7 @@
             });
 
             rtdb.ref(`/dg_calls/${currentCallId}/callerIce`).on('child_added', snap => {
-                if (snap.val()) peerConnection.addIceCandidate(new RTCIceCandidate(snap.val()));
+                if (snap.val() && peerConnection) peerConnection.addIceCandidate(new RTCIceCandidate(snap.val()));
             });
 
             callRef = rtdb.ref(`/dg_calls/${currentCallId}`);
@@ -867,7 +882,6 @@
         cleanupCall();
     }
 
-    // Управление микрофоном, камерой и динамиком
     function toggleCallMic() {
         if (localStream) {
             isCallMicMuted = !isCallMicMuted;
@@ -891,14 +905,10 @@
         
         const rAudio = document.getElementById('remoteAudio');
         const rVideo = document.getElementById('remoteVideo');
-        
-        // Экспериментальный метод для Android Chrome. На iOS не сработает.
         if (typeof rAudio.setSinkId === 'function') {
-            const targetSink = isSpeakerOn ? 'default' : ''; // Если пустая строка, браузер сам решает. Идеального решения для браузера нет.
+            const targetSink = isSpeakerOn ? 'default' : ''; 
             rAudio.setSinkId(targetSink).catch(e => console.log(e));
             rVideo.setSinkId(targetSink).catch(e => console.log(e));
-        } else {
-            // alert("Смена динамика аппаратно блокируется iOS/браузером. Используйте кнопки громкости.");
         }
     }
     
@@ -1153,7 +1163,6 @@
     function prevStory() { currentStoryIdx--; showStoryFrame(); }
     function closeStory() { clearTimeout(storyTimerId); document.getElementById('storyViewer').style.display = 'none'; }
 
-
     let selectedMsgIdxForMenu = null;
 
     function openMsgMenu(e, idx, msgUid) {
@@ -1204,7 +1213,6 @@
         selectedMsgIdxForMenu = idx;
         reactMsg(emoji);
     }
-
 
     function createGroup() {
         if (!me) return;
@@ -1470,7 +1478,6 @@
         area.scrollTop = area.scrollHeight;
     }
 
-    // 🚀 ИСПРАВЛЕНА МОМЕНТАЛЬНАЯ ОТПРАВКА
     function send() {
         const inp = document.getElementById('m-in');
         if (!inp.value.trim() || !activeChat) return;
@@ -1481,7 +1488,6 @@
             if (!db.chats[chatIndex].msgs) db.chats[chatIndex].msgs = [];
             db.chats[chatIndex].msgs.push(msgObj);
             
-            // Прямая отправка только в один чат (без перезаписи остальных)
             rtdb.ref(`/dg_app_data/chats/${chatIndex}/msgs`).set(db.chats[chatIndex].msgs);
             inp.value = '';
             renderMsgs();
@@ -1523,8 +1529,10 @@
                     isRecordingVoice = true;
                     btn.classList.add('recording-pulse');
                     
-                    const mime = getSupportedMimeType('audio');
-                    const options = mime ? { mimeType: mime } : undefined;
+                    let options = undefined;
+                    if (MediaRecorder.isTypeSupported('audio/webm')) options = { mimeType: 'audio/webm' };
+                    else if (MediaRecorder.isTypeSupported('audio/mp4')) options = { mimeType: 'audio/mp4' };
+                    
                     mediaRecorder = new MediaRecorder(stream, options);
                     
                     recordedChunks = [];
@@ -1565,8 +1573,10 @@
                     isRecordingVideo = true;
                     btn.classList.add('recording-pulse');
                     
-                    const mime = getSupportedMimeType('video');
-                    const options = mime ? { mimeType: mime } : undefined;
+                    let options = undefined;
+                    if (MediaRecorder.isTypeSupported('video/webm')) options = { mimeType: 'video/webm' };
+                    else if (MediaRecorder.isTypeSupported('video/mp4')) options = { mimeType: 'video/mp4' };
+                    
                     mediaRecorder = new MediaRecorder(stream, options);
                     
                     recordedChunks = [];
@@ -1645,7 +1655,6 @@
         return container;
     }
     
-    // --- АДМИНКА ---
     function openAdminPanel() { if (me.login !== 'helper') return; renderAdminPanel(); document.getElementById('adminModal').classList.add('active'); }
     function closeAdminPanel() { document.getElementById('adminModal').classList.remove('active'); }
     
@@ -1681,7 +1690,6 @@
     function toggleBan(userId) { const user = db.users.find(u => u.id === userId); if (user) { user.isBanned = user.isBanned ? false : true; rtdb.ref('/dg_app_data/users').set(db.users); renderAdminPanel(); } }
     function deleteUser(userId) { if (!confirm('Удалить юзера?')) return; db.users = db.users.filter(u => u.id !== userId); db.users.forEach(u => { if (u.friends) u.friends = u.friends.filter(fid => fid !== userId); }); db.chats = db.chats.filter(c => { if(c.type==='direct') return c.u1 !== userId && c.u2 !== userId; return true; }); rtdb.ref('/dg_app_data').set({ users: db.users, chats: db.chats, stories: db.stories }); renderAdminPanel(); }
     
-    // --- ОСТАЛЬНЫЙ ФУНКЦИОНАЛ ---
     function viewChatInfo() {
         if (!activeChat) return;
         const content = document.getElementById('profileModalContent');
@@ -1725,7 +1733,7 @@
     }
     
     function deleteChat() { if (!confirm('Точно удалить для всех?')) return; db.chats = db.chats.filter(c => c.id !== activeChat.id); rtdb.ref('/dg_app_data/chats').set(db.chats); closeProfileModal(); closeChat(); }
-    function leaveChat() { if (!confirm('Покинуть чат?')) return; activeChat.members = activeChat.members.filter(id => id !== me.id); const chatIndex = db.chats.findIndex(c => c.id === activeChat.id); if(chatIndex > -1) rtdb.ref(`/dg_app_data/chats/${chatIndex}`).set(db.chats[chatIndex]); closeProfileModal(); closeChat(); }
+    function leaveChat() { if (!confirm('Покинуть чат?')) return; activeChat.members = activeChat.members.filter(id => id !== me.id); const chatIndex = db.chats.findIndex(c => c.id === activeChat.id); if(chatIndex > -1) rtdb.ref(`/dg_app_data/chats/${chatIndex}/members`).set(db.chats[chatIndex].members); closeProfileModal(); closeChat(); }
     function closeChat() { document.getElementById('chat-window').classList.remove('active'); activeChat = null; renderChats(); }
     function applyTheme(t) { localSettings.theme = t; localStorage.setItem('DG_Settings', JSON.stringify(localSettings)); const colors = { blue: '#007aff', purple: '#a855f7', green: '#30d158', ghost: '#8e8e8e' }; document.documentElement.style.setProperty('--p', colors[t] || '#007aff'); document.querySelectorAll('.t-dot').forEach(d => d.classList.remove('active')); const dot = document.getElementById('dot-' + t); if (dot) dot.classList.add('active'); }
     function toggleLightMode() { localSettings.lightMode = !localSettings.lightMode; localStorage.setItem('DG_Settings', JSON.stringify(localSettings)); if (localSettings.lightMode) { document.documentElement.setAttribute('data-theme', 'light'); document.getElementById('themeIcon').textContent = '🌙'; } else { document.documentElement.removeAttribute('data-theme'); document.getElementById('themeIcon').textContent = '☀️'; } }
