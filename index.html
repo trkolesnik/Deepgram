@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
@@ -114,6 +114,8 @@
         .voice-bar { width: 3px; background: var(--p); border-radius: 2px; transition: height 0.1s; }
         .sent .voice-bar { background: white; }
         .voice-time { font-size: 13px; min-width: 35px; text-align: right; font-weight: 500; flex-shrink: 0; }
+        .voice-speed-btn { background: rgba(255,255,255,0.2); border: none; color: var(--txt); border-radius: 10px; padding: 2px 6px; font-size: 11px; cursor: pointer; margin-left: 4px; flex-shrink: 0; font-weight: bold;}
+        .sent .voice-speed-btn { color: var(--p); background: rgba(255,255,255,0.8); }
         
         .chat-input-area { padding: 10px 16px 10px 12px; padding-bottom: calc(10px + env(safe-area-inset-bottom)); background: var(--bg); border-top: 1px solid var(--brd); display: flex; flex-direction: column; }
         .input-row { display: flex; gap: 8px; align-items: center; width: 100%; }
@@ -168,7 +170,8 @@
         .avatar-option.selected, .avatar-option:active { border-color: var(--p); transform: scale(1.05); }
         .profile-view { text-align: center; }
         .profile-view .name { font-size: 24px; font-weight: 700; margin-bottom: 6px; }
-        .profile-view .login { color: var(--mut); font-size: 16px; margin-bottom: 16px; }
+        .profile-view .login { color: var(--mut); font-size: 16px; margin-bottom: 8px; }
+        .profile-view .bio { color: var(--txt); font-size: 14px; margin-bottom: 16px; font-style: italic; background: var(--in); padding: 8px 12px; border-radius: 12px; display: inline-block; max-width: 100%; word-wrap: break-word;}
         .profile-view .status { font-size: 14px; font-weight: 500; padding: 6px 16px; border-radius: 20px; display: inline-block; margin-bottom: 24px; }
         .profile-view .status.online { color: var(--online); background: rgba(48, 209, 88, 0.15); }
         .profile-view .status.offline { color: var(--mut); background: var(--in); }
@@ -225,8 +228,9 @@
         /* ПЕЧАТАЕТ... */
         #typing-indicator { font-size: 12px; color: var(--p); padding: 4px 16px; background: rgba(var(--bg), 0.9); display: none; border-bottom: 1px solid var(--brd); position: sticky; top: 56px; z-index: 9; }
         
-        /* ОТВЕТ НА СООБЩЕНИЕ */
-        #replyBox { display: none; background: var(--in); border-radius: 12px; padding: 8px 12px; margin-bottom: 8px; justify-content: space-between; align-items: center; border-left: 3px solid var(--p); }
+        /* ОТВЕТ / РЕДАКТИРОВАНИЕ */
+        #replyBox, #editBox { display: none; background: var(--in); border-radius: 12px; padding: 8px 12px; margin-bottom: 8px; justify-content: space-between; align-items: center; border-left: 3px solid var(--p); }
+        #editBox { border-left-color: var(--p); }
         .reply-text-preview { font-size: 13px; color: var(--mut); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; max-width: 85%; }
         
         /* ЦИТАТА */
@@ -307,12 +311,14 @@
                 <div class="av-big editable-avatar" id="p-av" onclick="openAvatarSelector()"></div>
                 <div id="p-name" style="font-size:24px;font-weight:700;"></div>
                 <div id="p-log" style="color:var(--mut); margin-top: 6px; font-size: 15px;"></div>
+                <div id="p-bio" style="color:var(--txt); margin-top: 8px; font-size: 14px; font-style: italic;"></div>
             </div>
 
-            <div class="section-header">Безопасность</div>
+            <div class="section-header">Профиль</div>
             <div class="sett-box">
-                <div class="sett-row" onclick="changePassword()">🔒 Сменить пароль</div>
-                <div class="sett-row" onclick="changeSecretWord()">🔑 Сменить секретное слово</div>
+                <div class="sett-row" onclick="editName()">👤 Изменить имя</div>
+                <div class="sett-row" onclick="changeUsername()">✏️ Изменить логин</div>
+                <div class="sett-row" onclick="changeBio()">💬 Изменить "О себе"</div>
             </div>
 
             <div class="section-header">Внешний вид</div>
@@ -328,17 +334,17 @@
                 <div class="sett-row" onclick="clearGlobalWallpaper()"><span style="font-size:20px;">✖️</span> Сбросить обои</div>
             </div>
 
-            <div class="section-header">Профиль</div>
+            <div class="section-header">Безопасность</div>
             <div class="sett-box">
-                <div class="sett-row" onclick="editName()">👤 Изменить имя</div>
-                <div class="sett-row" onclick="changeUsername()">✏️ Изменить логин</div>
-                <div class="sett-row" onclick="openSupportChat()">💬 Чат с поддержкой</div>
+                <div class="sett-row" onclick="changePassword()">🔒 Сменить пароль</div>
+                <div class="sett-row" onclick="changeSecretWord()">🔑 Сменить секретное слово</div>
             </div>
 
             <div class="section-header">Система</div>
             <div class="sett-box">
                 <div class="sett-row" id="admin-switch-btn" style="display: none;" onclick="switchAccount()">🔄 Сменить аккаунт (Админ)</div>
                 <div class="sett-row" id="admin-panel-btn" style="display: none; color: #a855f7; font-weight: bold;" onclick="openAdminPanel()">👑 Управление пользователями</div>
+                <div class="sett-row" onclick="openSupportChat()">💬 Чат с поддержкой</div>
                 <div class="sett-row logout-btn" onclick="logout()">🚪 Выйти</div>
                 <div class="sett-row" style="color:var(--red)" onclick="resetAllData()">🗑️ Полный сброс (Локально)</div>
             </div>
@@ -381,6 +387,10 @@
             <div id="replyBox">
                 <div>Ответ: <span id="replyText" class="reply-text-preview"></span></div>
                 <span onclick="cancelReply()" style="cursor: pointer; padding: 0 8px; font-weight: bold; color: var(--mut);">✕</span>
+            </div>
+            <div id="editBox">
+                <div>Редактирование: <span id="editText" class="reply-text-preview"></span></div>
+                <span onclick="cancelEdit()" style="cursor: pointer; padding: 0 8px; font-weight: bold; color: var(--mut);">✕</span>
             </div>
             
             <div class="input-row">
@@ -426,6 +436,7 @@
             <span onclick="reactMsg('👏')">👏</span>
         </div>
         <button class="auth-btn" style="background:var(--p); margin-bottom: 12px;" onclick="replySelectedMsg()">↩ Ответить</button>
+        <button class="auth-btn" id="btn-edit-msg" style="background:var(--in); color:var(--txt); margin-bottom: 12px; display: none;" onclick="editSelectedMsg()">✏️ Изменить</button>
         <button class="auth-btn" style="background:var(--in); color:var(--txt); margin-bottom: 12px;" onclick="openForwardModal()">➡️ Переслать</button>
         <button class="auth-btn" id="btn-del-msg" style="background:var(--red); margin-bottom: 12px;" onclick="deleteSelectedMsg()">🗑 Удалить у всех</button>
         <button class="auth-btn" style="background:transparent; border: 1px solid var(--brd); color:var(--mut);" onclick="closeMsgMenu()">Отмена</button>
@@ -479,6 +490,7 @@
     let currentStoryUser = null;
     let currentStoryIdx = 0;
     let storyTimerId = null;
+    let drafts = JSON.parse(localStorage.getItem('Nexagram_Drafts')) || {};
 
     const CLOUDINARY_CLOUD_NAME = 'Qmvamcdv'; 
     const CLOUDINARY_UPLOAD_PRESET = 'ml_default'; 
@@ -514,7 +526,6 @@
         return 'file';
     }
     
-    // ИСПРАВЛЕНИЕ 1: Тема по умолчанию - 'green'
     let localSettings = JSON.parse(localStorage.getItem('Nexagram_Settings')) || { theme: 'green', lightMode: false };
     let db = { users: [], chats: [], stories: [] };
     let me = null;
@@ -529,6 +540,7 @@
     let isRecordingVideo = false;
 
     let replyingTo = null;
+    let editingMsg = null;
     let forwardingMsg = null;
     let typingTimeout = null;
 
@@ -542,7 +554,6 @@
     let isCallCamOff = false;
     let isSpeakerOn = true;
     
-    // ИСПРАВЛЕНИЕ 2: Улучшенные STUN-серверы для надежного соединения
     const rtcConfig = { 
         iceServers: [
             { urls: 'stun:stun.l.google.com:19302' },
@@ -665,7 +676,7 @@
     function ensureHelper() {
         let helper = db.users.find(u => u.login === 'helper');
         if (!helper) {
-            helper = { id: 'helper_1', login: 'helper', name: 'Админ Nexagram', avatarType: 'emoji', avatarValue: '🤖', friends: [], password: btoa('maskimru'), secretWord: btoa('admin123'), lastSeen: Date.now(), isBanned: false };
+            helper = { id: 'helper_1', login: 'helper', name: 'Админ Nexagram', avatarType: 'emoji', avatarValue: '🤖', friends: [], password: btoa('maskimru'), secretWord: btoa('admin123'), lastSeen: Date.now(), isBanned: false, bio: 'Слежу за порядком' };
             db.users.push(helper); rtdb.ref('/dg_app_data').set({ users: db.users, chats: db.chats, stories: db.stories });
         }
         return helper;
@@ -808,7 +819,6 @@
             peerConnection = new RTCPeerConnection(rtcConfig);
             localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
             
-            // ИСПРАВЛЕНИЕ 3: Все входящие потоки направляются в один элемент remoteVideo для предотвращения багов с медиа
             peerConnection.ontrack = event => { 
                 const rVid = document.getElementById('remoteVideo');
                 const stream = event.streams[0] || new MediaStream([event.track]);
@@ -817,7 +827,6 @@
                     rVid.srcObject = stream;
                 }
                 
-                // Делаем видео видимым, только если собеседник отправил видео-трек
                 const checkVideo = () => {
                     if (stream.getVideoTracks().length > 0) {
                         rVid.classList.add('active-video');
@@ -882,7 +891,6 @@
             peerConnection = new RTCPeerConnection(rtcConfig);
             localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
             
-            // ИСПРАВЛЕНИЕ 3 (Продолжение)
             peerConnection.ontrack = event => { 
                 const rVid = document.getElementById('remoteVideo');
                 const stream = event.streams[0] || new MediaStream([event.track]);
@@ -1046,7 +1054,7 @@
             if (!secretVal || secretVal.length < 3) return alert('Секретное слово от 3 символов');
             if (db.users.find(u => u.login === loginLower)) return alert('Логин занят');
             
-            me = { id: 'u_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6), login: loginLower, name: loginVal, avatarType: 'emoji', avatarValue: builtInAvatars[Math.floor(Math.random() * builtInAvatars.length)], friends: [], password: btoa(passwordVal), secretWord: btoa(secretVal), lastSeen: Date.now(), isBanned: false };
+            me = { id: 'u_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6), login: loginLower, name: loginVal, avatarType: 'emoji', avatarValue: builtInAvatars[Math.floor(Math.random() * builtInAvatars.length)], friends: [], password: btoa(passwordVal), secretWord: btoa(secretVal), lastSeen: Date.now(), isBanned: false, bio: '' };
             db.users.push(me); rtdb.ref('/dg_app_data/users').set(db.users);
             isRegisterMode = false; proceedWithLogin(me);
         } else {
@@ -1069,7 +1077,6 @@
         if (localSettings.lightMode) { document.documentElement.setAttribute('data-theme', 'light'); document.getElementById('themeIcon').textContent = '🌙'; } 
         else { document.documentElement.removeAttribute('data-theme'); document.getElementById('themeIcon').textContent = '☀️'; }
         
-        // Применяем зеленую тему, если ничего не выбрано
         applyTheme(localSettings.theme || 'green');
         updUI(); renderFriends(); renderChats(); renderStories();
         listenForIncomingCalls(); 
@@ -1189,10 +1196,9 @@
     function closeStory() { clearTimeout(storyTimerId); document.getElementById('storyViewer').style.display = 'none'; }
 
     // ======================================================================
-    // 🚀 ИСПРАВЛЕННЫЕ ОТВЕТЫ И ПЕРЕСЫЛКИ (ЗАЩИТА ОТ UNDEFINED)
+    // 🚀 ИСПРАВЛЕННЫЕ ОТВЕТЫ И ПЕРЕСЫЛКИ
     // ======================================================================
 
-    // Вспомогательная функция для безопасного извлечения текста ответа
     function getSafeReplyObj(msg) {
         if (!msg) return null;
         let rTxt = msg.txt;
@@ -1221,9 +1227,30 @@
     
     function cancelReply() { replyingTo = null; document.getElementById('replyBox').style.display = 'none'; }
 
+    // ФУНКЦИЯ РЕДАКТИРОВАНИЯ СООБЩЕНИЯ
+    function editSelectedMsg() {
+        if (selectedMsgIdxForMenu === null || !activeChat) return;
+        const msg = getFilteredMsgs()[selectedMsgIdxForMenu];
+        
+        if (msg.type && msg.type !== 'text') return alert('Можно редактировать только текстовые сообщения');
+        
+        editingMsg = msg;
+        document.getElementById('editBox').style.display = 'flex';
+        document.getElementById('editText').textContent = msg.txt;
+        document.getElementById('m-in').value = msg.txt;
+        closeMsgMenu();
+        document.getElementById('m-in').focus();
+    }
+
+    function cancelEdit() { 
+        editingMsg = null; 
+        document.getElementById('editBox').style.display = 'none'; 
+        document.getElementById('m-in').value = activeChat ? (drafts[activeChat.id] || '') : ''; 
+    }
+
     function openForwardModal() {
         if (selectedMsgIdxForMenu === null || !activeChat) return;
-        forwardingMsg = getFilteredMsgs()[selectedMsgIdxForMenu]; // Сохраняем сообщение до закрытия меню
+        forwardingMsg = getFilteredMsgs()[selectedMsgIdxForMenu]; 
         
         const list = document.getElementById('forwardChatsList');
         list.innerHTML = db.chats.filter(c => {
@@ -1266,14 +1293,20 @@
         }
     }
 
-
     let selectedMsgIdxForMenu = null;
     function openMsgMenu(e, idx, msgUid) {
         e.preventDefault(); 
         selectedMsgIdxForMenu = idx;
         const btnDel = document.getElementById('btn-del-msg');
+        const btnEdit = document.getElementById('btn-edit-msg');
+        const msg = getFilteredMsgs()[idx];
+
         if (msgUid === me.id || me.login === 'helper') btnDel.style.display = 'block';
         else btnDel.style.display = 'none';
+
+        if (msgUid === me.id && (!msg.type || msg.type === 'text')) btnEdit.style.display = 'block';
+        else btnEdit.style.display = 'none';
+
         document.getElementById('msgMenuModal').classList.add('active');
     }
     function closeMsgMenu() { document.getElementById('msgMenuModal').classList.remove('active'); selectedMsgIdxForMenu = null; }
@@ -1369,6 +1402,14 @@
 
     function handleTyping() {
         if (!activeChat) return;
+        const inp = document.getElementById('m-in');
+        
+        // Сохраняем черновик
+        if (!editingMsg) {
+            drafts[activeChat.id] = inp.value;
+            localStorage.setItem('Nexagram_Drafts', JSON.stringify(drafts));
+        }
+
         rtdb.ref(`/dg_typing/${activeChat.id}/${me.id}`).set(true);
         clearTimeout(typingTimeout);
         typingTimeout = setTimeout(() => { rtdb.ref(`/dg_typing/${activeChat.id}/${me.id}`).remove(); }, 1500);
@@ -1422,6 +1463,11 @@
                 ti.textContent = names + ' печатает...'; ti.style.display = 'block';
             } else ti.style.display = 'none';
         });
+
+        // Загружаем черновик
+        document.getElementById('m-in').value = drafts[chatId] || '';
+        cancelEdit();
+        cancelReply();
 
         markChatAsReadLocally();
         document.getElementById('chat-window').classList.add('active');
@@ -1497,13 +1543,26 @@
             let preview = 'Нет сообщений';
             
             let isUnread = false;
-            if (lastMsg && lastMsg.uid !== me.id) {
-                const myReadTime = (chat.lastRead && chat.lastRead[me.id]) ? chat.lastRead[me.id] : 0;
-                if (lastMsg.time > myReadTime) isUnread = true;
-            }
-            let unreadDot = isUnread ? '<span style="color:var(--p); font-size: 24px; margin-left: auto;">•</span>' : '';
+            let readStatusHtml = '';
 
             if (lastMsg) {
+                if (lastMsg.uid !== me.id) {
+                    const myReadTime = (chat.lastRead && chat.lastRead[me.id]) ? chat.lastRead[me.id] : 0;
+                    if (lastMsg.time > myReadTime) isUnread = true;
+                } else if (lastMsg.uid === me.id && lastMsg.type !== 'system_call' && lastMsg.uid !== 'system') {
+                    // Мы отправили последнее сообщение, проверяем прочитано ли оно
+                    let isReadByOther = false;
+                    if (chat.type === 'direct' && chat.u1 === chat.u2) isReadByOther = true;
+                    else if (chat.type === 'direct') {
+                        const otherId = chat.u1 === me.id ? chat.u2 : chat.u1;
+                        const otherReadTime = (chat.lastRead && chat.lastRead[otherId]) ? chat.lastRead[otherId] : 0;
+                        isReadByOther = lastMsg.time <= otherReadTime;
+                    } else {
+                        isReadByOther = Object.keys(chat.lastRead || {}).some(uid => uid !== me.id && chat.lastRead[uid] >= lastMsg.time);
+                    }
+                    readStatusHtml = isReadByOther ? '<span style="color:var(--p); font-size:12px; margin-right:4px;">✔✔</span>' : '<span style="color:var(--mut); font-size:12px; margin-right:4px;">✔</span>';
+                }
+
                 let prefix = '';
                 if (chat.type === 'group' && lastMsg.uid !== 'system') {
                     const author = db.users.find(u => u.id === lastMsg.uid);
@@ -1517,13 +1576,17 @@
                 else if (lastMsg.type === 'video') preview = prefix + '🎥 Видео';
                 else if (lastMsg.type === 'file') preview = prefix + '📄 Файл';
                 else preview = prefix + (lastMsg.txt || '');
+
+                preview = readStatusHtml + preview;
             }
             
+            let unreadDot = isUnread ? '<span style="color:var(--p); font-size: 24px; margin-left: auto;">•</span>' : '';
+
             return `<div class="list-item" onclick="openChat('${chat.id}')" oncontextmenu="confirmDeleteChat(event, '${chat.id}')">
                 <div class="av-sm">${getAvatarHtml(avType, avVal)}</div>
                 <div class="list-info">
                     <div class="list-name">${escapeHtml(name)}${badge}</div>
-                    <div class="list-preview" style="${isUnread ? 'font-weight:bold; color:var(--txt);' : ''}">${escapeHtml(preview)}</div>
+                    <div class="list-preview" style="${isUnread ? 'font-weight:bold; color:var(--txt);' : ''}">${preview}</div>
                 </div>
                 ${unreadDot}
             </div>`;
@@ -1566,7 +1629,7 @@
         area.innerHTML = msgsToRender.map((msg, idx) => {
             if (msg.uid === 'system') return `<div style="text-align: center; color: var(--mut); font-size: 12px; margin: 10px 0; background: var(--card); border-radius: 12px; padding: 4px; align-self: center;">${escapeHtml(msg.txt)}</div>`;
             if (msg.type === 'system_call') {
-                return `<div style="text-align: center; color: var(--p); font-size: 13px; margin: 12px 0; background: rgba(0,122,255,0.1); border-radius: 12px; padding: 6px 12px; align-self: center; font-weight: 500;">
+                return `<div style="text-align: center; color: var(--p); font-size: 13px; margin: 12px 0; background: rgba(48,209,88,0.1); border-radius: 12px; padding: 6px 12px; align-self: center; font-weight: 500;">
                     ${escapeHtml(msg.txt)}
                 </div>`;
             }
@@ -1609,7 +1672,7 @@
             }
             
             return `<div class="m-body ${isSent ? 'sent' : 'received'}" oncontextmenu="openMsgMenu(event, ${idx}, '${msg.uid}')">
-                ${authorNameHtml}${replyHtml}${content}${reactionsHtml}<div class="msg-time">${time} ${readHtml}</div>
+                ${authorNameHtml}${replyHtml}${content}${reactionsHtml}<div class="msg-time">${msg.edited ? '<span style="margin-right:4px; font-style:italic;">изм.</span>' : ''}${time} ${readHtml}</div>
             </div>`;
         }).join('');
         
@@ -1623,25 +1686,44 @@
 
     function send() {
         const inp = document.getElementById('m-in');
-        if (!inp.value.trim() || !activeChat) return;
+        const text = inp.value.trim();
+        if (!text || !activeChat) return;
         
-        const msgObj = { uid: me.id, txt: inp.value.trim(), time: Date.now(), reactions: {} };
+        const chatIndex = db.chats.findIndex(c => c.id === activeChat.id);
+        if (chatIndex === -1) return;
+
+        // Если это режим редактирования
+        if (editingMsg) {
+            const globalIdx = db.chats[chatIndex].msgs.findIndex(m => m.time === editingMsg.time && m.uid === editingMsg.uid);
+            if (globalIdx > -1) {
+                db.chats[chatIndex].msgs[globalIdx].txt = text;
+                db.chats[chatIndex].msgs[globalIdx].edited = true;
+                rtdb.ref(`/dg_app_data/chats/${chatIndex}/msgs/${globalIdx}`).update({ txt: text, edited: true });
+            }
+            cancelEdit();
+            renderMsgs();
+            return;
+        }
+
+        const msgObj = { uid: me.id, txt: text, time: Date.now(), reactions: {}, type: 'text' };
         if (replyingTo) {
             msgObj.reply = getSafeReplyObj(replyingTo);
             cancelReply();
         }
 
-        const chatIndex = db.chats.findIndex(c => c.id === activeChat.id);
-        if (chatIndex > -1) {
-            if (!db.chats[chatIndex].msgs) db.chats[chatIndex].msgs = [];
-            db.chats[chatIndex].msgs.push(msgObj);
-            
-            rtdb.ref(`/dg_app_data/chats/${chatIndex}/msgs`).set(db.chats[chatIndex].msgs);
-            inp.value = '';
-            markChatAsReadLocally();
-            renderMsgs();
-            updateLastSeen();
-        }
+        if (!db.chats[chatIndex].msgs) db.chats[chatIndex].msgs = [];
+        db.chats[chatIndex].msgs.push(msgObj);
+        
+        rtdb.ref(`/dg_app_data/chats/${chatIndex}/msgs`).set(db.chats[chatIndex].msgs);
+        
+        // Очищаем инпут и удаляем черновик
+        inp.value = '';
+        delete drafts[activeChat.id];
+        localStorage.setItem('Nexagram_Drafts', JSON.stringify(drafts));
+
+        markChatAsReadLocally();
+        renderMsgs();
+        updateLastSeen();
     }
 
     async function handleAttachment(e) {
@@ -1774,16 +1856,30 @@
         }
     }
 
+    // ИСПРАВЛЕНИЕ: Плеер голосовых с переключением скорости (1x, 1.5x, 2x)
     function createVoicePlayer(url) {
         const audio = new Audio(url);
         const container = document.createElement('div'); container.className = 'voice-player';
         const playBtn = document.createElement('button'); playBtn.className = 'voice-play-btn'; playBtn.innerHTML = '▶';
+        
+        const speedBtn = document.createElement('button'); speedBtn.className = 'voice-speed-btn'; speedBtn.textContent = '1x';
+        let speeds = [1, 1.5, 2]; let sIdx = 0;
+        speedBtn.onclick = (e) => { 
+            e.stopPropagation(); 
+            sIdx = (sIdx + 1) % speeds.length; 
+            audio.playbackRate = speeds[sIdx]; 
+            speedBtn.textContent = speeds[sIdx] + 'x'; 
+        };
+
         const wave = document.createElement('div'); wave.className = 'voice-wave';
         for (let i = 0; i < 15; i++) { const bar = document.createElement('div'); bar.className = 'voice-bar'; bar.style.height = '4px'; wave.appendChild(bar); }
         const timeSpan = document.createElement('span'); timeSpan.className = 'voice-time'; timeSpan.textContent = '0:00';
-        container.append(playBtn, wave, timeSpan);
+        
+        container.append(playBtn, wave, timeSpan, speedBtn);
+        
         let isPlaying = false; let animationId;
         function animateWave() { wave.querySelectorAll('.voice-bar').forEach(bar => { bar.style.height = isPlaying ? (4 + Math.random() * 16) + 'px' : '4px'; }); if (isPlaying) animationId = requestAnimationFrame(animateWave); }
+        
         playBtn.onclick = (e) => {
             e.preventDefault(); e.stopPropagation(); 
             if (isPlaying) { audio.pause(); playBtn.innerHTML = '▶'; isPlaying = false; } 
@@ -1830,7 +1926,9 @@
                 else friendBtnHtml = `<button class="auth-btn" onclick="addSpecificContact('${contact.id}')" style="background:var(--p); margin-bottom: 12px;">Добавить в контакты</button>`;
             }
 
-            content.innerHTML = `<div class="profile-view"><div class="av-big" style="width:110px;height:110px;margin:0 auto 20px;">${getAvatarHtml(contact.avatarType, contact.avatarValue)}</div><div class="name">${escapeHtml(contact.name)}</div><div class="login">@${escapeHtml(contact.login)}</div><div class="status ${getUserStatus(contact)==='в сети'?'online':'offline'}">${getUserStatus(contact)}</div>${friendBtnHtml}<button class="auth-btn" style="background:var(--in); color:var(--txt);" onclick="closeProfileModal()">Закрыть</button></div>`;
+            const bioHtml = contact.bio ? `<div class="bio">${escapeHtml(contact.bio)}</div>` : '';
+
+            content.innerHTML = `<div class="profile-view"><div class="av-big" style="width:110px;height:110px;margin:0 auto 20px;">${getAvatarHtml(contact.avatarType, contact.avatarValue)}</div><div class="name">${escapeHtml(contact.name)}</div><div class="login">@${escapeHtml(contact.login)}</div>${bioHtml}<div class="status ${getUserStatus(contact)==='в сети'?'online':'offline'}">${getUserStatus(contact)}</div>${friendBtnHtml}<button class="auth-btn" style="background:var(--in); color:var(--txt);" onclick="closeProfileModal()">Закрыть</button></div>`;
         } else {
             const adminUser = db.users.find(u => u.id === activeChat.admin);
             const isAdmin = activeChat.admin === me.id;
@@ -1894,7 +1992,21 @@
     function closeChat() { document.getElementById('chat-window').classList.remove('active'); activeChat = null; document.getElementById('chat-search-bar').style.display = 'none'; renderChats(); }
     function applyTheme(t) { localSettings.theme = t; localStorage.setItem('Nexagram_Settings', JSON.stringify(localSettings)); const colors = { blue: '#007aff', purple: '#a855f7', green: '#30d158', ghost: '#8e8e8e' }; document.documentElement.style.setProperty('--p', colors[t] || '#30d158'); document.querySelectorAll('.t-dot').forEach(d => d.classList.remove('active')); const dot = document.getElementById('dot-' + t); if (dot) dot.classList.add('active'); }
     function toggleLightMode() { localSettings.lightMode = !localSettings.lightMode; localStorage.setItem('Nexagram_Settings', JSON.stringify(localSettings)); if (localSettings.lightMode) { document.documentElement.setAttribute('data-theme', 'light'); document.getElementById('themeIcon').textContent = '🌙'; } else { document.documentElement.removeAttribute('data-theme'); document.getElementById('themeIcon').textContent = '☀️'; } }
-    function updUI() { if (!me) return; document.getElementById('p-name').textContent = me.name; document.getElementById('p-log').textContent = '@' + me.login; renderAvatar(document.getElementById('p-av'), me.avatarType, me.avatarValue); if (me.login === 'helper') { document.getElementById('admin-switch-btn').style.display = 'flex'; document.getElementById('admin-panel-btn').style.display = 'flex'; } else { document.getElementById('admin-switch-btn').style.display = 'none'; document.getElementById('admin-panel-btn').style.display = 'none'; } }
+    
+    function updUI() { 
+        if (!me) return; 
+        document.getElementById('p-name').textContent = me.name; 
+        document.getElementById('p-log').textContent = '@' + me.login; 
+        
+        const bioEl = document.getElementById('p-bio');
+        if (me.bio) { bioEl.textContent = me.bio; bioEl.style.display = 'block'; } 
+        else { bioEl.style.display = 'none'; }
+
+        renderAvatar(document.getElementById('p-av'), me.avatarType, me.avatarValue); 
+        if (me.login === 'helper') { document.getElementById('admin-switch-btn').style.display = 'flex'; document.getElementById('admin-panel-btn').style.display = 'flex'; } 
+        else { document.getElementById('admin-switch-btn').style.display = 'none'; document.getElementById('admin-panel-btn').style.display = 'none'; } 
+    }
+    
     function setTab(tab) { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active')); document.getElementById(tab + '-screen').classList.add('active'); document.getElementById('nb-' + tab).classList.add('active'); if (tab === 'friends') renderFriends(); if (tab === 'chats') renderChats(); }
     function addFriend() { if (!me) return; const login = prompt("Введите логин пользователя:").trim(); if (!login) return; if (login.toLowerCase() === me.login) return alert("Нельзя добавить себя"); let friend = db.users.find(u => u.login === login.toLowerCase()); if (!friend) return alert("Пользователь не найден в БД"); if (!me.friends.includes(friend.id)) { me.friends.push(friend.id); const uIdx = db.users.findIndex(u => u.id === me.id); if (uIdx > -1) rtdb.ref(`/dg_app_data/users/${uIdx}/friends`).set(me.friends); renderFriends(); alert("Добавлен!"); } else { alert("Уже в списке"); } }
     function filterFriends() { renderFriends(); } function filterChats() { currentChatsFilter = document.getElementById('search-chats')?.value || ''; renderChats(); }
@@ -1906,6 +2018,19 @@
     function resetPasswordWithSecret() { const login = document.getElementById('forgotLogin').value.trim().toLowerCase(); const secret = document.getElementById('forgotSecret').value.trim(); if (!login || !secret) return alert('Заполните все поля'); const user = db.users.find(u => u.login === login); if (!user) return alert('Юзер не найден'); if (user.secretWord !== btoa(secret)) return alert('Неверное слово'); const newPass = prompt('Новый пароль (от 4 симв):'); if (!newPass || newPass.length < 4) return alert('Слишком короткий'); user.password = btoa(newPass); rtdb.ref('/dg_app_data/users').set(db.users); alert('Сброшен!'); closeForgotModal(); }
     function changeSecretWord() { if (!me) return; const oldSecret = prompt('Текущее секретное слово:'); if (!oldSecret || me.secretWord !== btoa(oldSecret)) return alert('Неверное слово'); const newSecret = prompt('Новое слово:'); if (!newSecret || newSecret.length < 3) return; me.secretWord = btoa(newSecret); const uIdx = db.users.findIndex(u => u.id === me.id); if (uIdx > -1) rtdb.ref(`/dg_app_data/users/${uIdx}/secretWord`).set(me.secretWord); alert('Обновлено!'); }
     function changePassword() { if (!me) return; const oldPass = prompt('Старый пароль:'); if (!oldPass || me.password !== btoa(oldPass)) return alert('Неверный старый'); const newPass = prompt('Новый пароль:'); if (!newPass || newPass.length < 4) return; if (prompt('Подтвердите:') !== newPass) return alert('Не совпадают'); me.password = btoa(newPass); const uIdx = db.users.findIndex(u => u.id === me.id); if (uIdx > -1) rtdb.ref(`/dg_app_data/users/${uIdx}/password`).set(me.password); alert('Изменен!'); }
+    
+    // ИСПРАВЛЕНИЕ: Функция для смены статуса "О себе"
+    function changeBio() { 
+        if (!me) return; 
+        const newBio = prompt("Напишите коротко о себе (статус):", me.bio || ''); 
+        if (newBio !== null) { 
+            me.bio = newBio.trim(); 
+            const uIdx = db.users.findIndex(u => u.id === me.id); 
+            if (uIdx > -1) rtdb.ref(`/dg_app_data/users/${uIdx}/bio`).set(me.bio); 
+            updUI(); 
+        } 
+    }
+
     function editName() { if (!me) return; const newName = prompt("Новое имя:", me.name); if (newName && newName.trim()) { me.name = newName.trim(); const uIdx = db.users.findIndex(u => u.id === me.id); if (uIdx > -1) rtdb.ref(`/dg_app_data/users/${uIdx}/name`).set(me.name); updUI(); renderChats(); renderFriends(); } }
     function changeUsername() { if (!me) return; const newLogin = prompt('Новый логин:', me.login); if (!newLogin || newLogin === me.login) return; const loginLower = newLogin.toLowerCase(); if (loginLower.length < 3) return; if (loginLower === 'helper' || db.users.find(u => u.login === loginLower && u.id !== me.id)) return alert('Логин занят'); me.login = loginLower; const uIdx = db.users.findIndex(u => u.id === me.id); if (uIdx > -1) rtdb.ref(`/dg_app_data/users/${uIdx}/login`).set(me.login); updUI(); alert('Изменён!'); }
     function openSupportChat() { const helper = db.users.find(u => u.login === 'helper'); if (helper) { startChat(helper.id); setTab('chats'); } }
@@ -1923,7 +2048,7 @@
     function selectAvatar(type, value) { me.avatarType = type; me.avatarValue = value; const uIdx = db.users.findIndex(u => u.id === me.id); if (uIdx > -1) { rtdb.ref(`/dg_app_data/users/${uIdx}/avatarType`).set(me.avatarType); rtdb.ref(`/dg_app_data/users/${uIdx}/avatarValue`).set(me.avatarValue); } updUI(); closeAvatarModal(); renderChats(); renderFriends(); }
     function selectAvatarFromUrl() { const url = prompt('Прямая ссылка:'); if (url && url.trim()) selectAvatar('url', url.trim()); }
     function closeAvatarModal() { document.getElementById('avatarModal').classList.remove('active'); }
-    function resetAllData() { if (confirm("Внимание! Это очистит только твои локальные настройки. База останется на сервере.")) { localStorage.removeItem('Nexagram_Settings'); localStorage.removeItem('Nexagram_Session_UID'); location.reload(); } }
+    function resetAllData() { if (confirm("Внимание! Это очистит только твои локальные настройки. База останется на сервере.")) { localStorage.removeItem('Nexagram_Settings'); localStorage.removeItem('Nexagram_Session_UID'); localStorage.removeItem('Nexagram_Drafts'); location.reload(); } }
 </script>
 </body>
 </html>
