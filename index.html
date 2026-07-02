@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#000000">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Deepgram — где рождается общение</title>
+    <title>Nexagram — где рождается общение</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         :root {
@@ -136,7 +136,7 @@
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
         .auth-container { width: 100%; max-width: 340px; text-align: center; animation: fadeIn 0.5s ease; }
-        .brand-square { display: inline-block; background: var(--p, #a855f7); padding: 16px 28px; border-radius: 24px; font-size: 42px; font-weight: 800; letter-spacing: -1px; color: white; box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4); margin-bottom: 12px; }
+        .brand-square { display: inline-block; background: var(--p, #a855f7); padding: 16px 28px; border-radius: 24px; font-size: 32px; font-weight: 800; letter-spacing: -1px; color: white; box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4); margin-bottom: 12px; }
         .auth-subtitle { color: var(--mut); font-size: 15px; margin-bottom: 32px; letter-spacing: 0.5px; }
         .auth-input { width: 100%; padding: 16px; background: #111; border: 1px solid #333; color: #fff; border-radius: 16px; margin-bottom: 12px; font-size: 16px; outline: none; transition: all 0.2s; }
         .auth-input:focus { border-color: var(--p); background: #1a1a1a; }
@@ -239,13 +239,13 @@
 <!-- АВТОГЕНЕРАЦИЯ PWA MANIFEST -->
 <script>
     const pwaManifest = {
-        "name": "Deepgram",
-        "short_name": "DG",
+        "name": "Nexagram",
+        "short_name": "Nexagram",
         "start_url": ".",
         "display": "standalone",
         "background_color": "#000000",
         "theme_color": "#000000",
-        "icons": [{ "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSI1MCIgZmlsbD0iIzAwN2FmZiIvPjx0ZXh0IHg9IjUwIiB5PSI2MCIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjMwIiBmb250LXdlaWdodD0iYm9sZCIgZmlsbD0id2hpdGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiPkRHPC90ZXh0Pjwvc3ZnPg==", "sizes": "512x512", "type": "image/svg+xml" }]
+        "icons": [{ "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSI1MCIgZmlsbD0iIzAwN2FmZiIvPjx0ZXh0IHg9IjUwIiB5PSI1NSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE0IiBmb250LXdlaWdodD0iYm9sZCIgZmlsbD0id2hpdGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiPk5leGFncmFtPC90ZXh0Pjwvc3ZnPg==", "sizes": "512x512", "type": "image/svg+xml" }]
     };
     const manifestUrl = 'data:application/manifest+json;charset=utf-8,' + encodeURIComponent(JSON.stringify(pwaManifest));
     document.head.insertAdjacentHTML('beforeend', `<link rel="manifest" href="${manifestUrl}">`);
@@ -261,7 +261,7 @@
 
 <div id="auth">
     <div class="auth-container">
-        <div class="brand-square">DG</div>
+        <div class="brand-square">Nexagram</div>
         <div class="auth-subtitle">Где рождается общение</div>
         <input type="text" id="loginInput" class="auth-input" placeholder="Логин" autocomplete="off" onkeypress="if(event.key==='Enter') login()">
         <input type="password" id="passwordInput" class="auth-input" placeholder="Пароль" autocomplete="current-password" onkeypress="if(event.key==='Enter') login()">
@@ -373,6 +373,11 @@
 
         <div class="msgs" id="m-area"></div>
 
+        <!-- Контейнер для предпросмотра видеокружка -->
+        <div id="video-circle-preview-container" style="display:none; position:absolute; bottom: 80px; right: 16px; width: 140px; height: 140px; border-radius: 50%; overflow: hidden; border: 3px solid var(--p); z-index: 1000; background: #000; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
+            <video id="video-circle-preview" autoplay playsinline muted style="width:100%; height:100%; object-fit:cover; transform: scaleX(-1);"></video>
+        </div>
+
         <div class="chat-input-area" id="chat-input-area">
             <div id="replyBox">
                 <div>Ответ: <span id="replyText" class="reply-text-preview"></span></div>
@@ -473,6 +478,11 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 
 <script>
+    // ИСПРАВЛЕНИЕ 1: Явно объявляем глобальные переменные для историй, чтобы избежать ReferenceError в строгом режиме
+    let currentStoryUser = null;
+    let currentStoryIdx = 0;
+    let storyTimerId = null;
+
     const CLOUDINARY_CLOUD_NAME = 'Qmvamcdv'; 
     const CLOUDINARY_UPLOAD_PRESET = 'ml_default'; 
 
@@ -507,7 +517,7 @@
         return 'file';
     }
     
-    let localSettings = JSON.parse(localStorage.getItem('DG_Settings')) || { theme: 'blue', lightMode: false };
+    let localSettings = JSON.parse(localStorage.getItem('Nexagram_Settings')) || { theme: 'blue', lightMode: false };
     let db = { users: [], chats: [], stories: [] };
     let me = null;
     let activeChat = null;
@@ -581,11 +591,11 @@
                     }
                 } else logout();
             } else {
-                const savedSession = localStorage.getItem('DG_Session_UID');
+                const savedSession = localStorage.getItem('Nexagram_Session_UID');
                 if (savedSession) {
                     const user = db.users.find(u => u.id === savedSession);
                     if (user && !user.isBanned) proceedWithLogin(user);
-                    else localStorage.removeItem('DG_Session_UID');
+                    else localStorage.removeItem('Nexagram_Session_UID');
                 }
             }
         } catch (err) {
@@ -650,7 +660,7 @@
     function ensureHelper() {
         let helper = db.users.find(u => u.login === 'helper');
         if (!helper) {
-            helper = { id: 'helper_1', login: 'helper', name: 'Админ Deepgram', avatarType: 'emoji', avatarValue: '🤖', friends: [], password: btoa('maskimru'), secretWord: btoa('admin123'), lastSeen: Date.now(), isBanned: false };
+            helper = { id: 'helper_1', login: 'helper', name: 'Админ Nexagram', avatarType: 'emoji', avatarValue: '🤖', friends: [], password: btoa('maskimru'), secretWord: btoa('admin123'), lastSeen: Date.now(), isBanned: false };
             db.users.push(helper); rtdb.ref('/dg_app_data').set({ users: db.users, chats: db.chats, stories: db.stories });
         }
         return helper;
@@ -1024,7 +1034,7 @@
     function proceedWithLogin(user) {
         me = user;
         me.lastSeen = Date.now();
-        localStorage.setItem('DG_Session_UID', me.id);
+        localStorage.setItem('Nexagram_Session_UID', me.id);
         
         document.getElementById('auth').style.display = 'none';
         document.getElementById('app').style.display = 'flex';
@@ -1040,7 +1050,7 @@
 
     function logout() {
         if (confirm('Выйти из аккаунта?')) {
-            localStorage.removeItem('DG_Session_UID');
+            localStorage.removeItem('Nexagram_Session_UID');
             me = null; activeChat = null;
             document.getElementById('app').style.display = 'none';
             document.getElementById('auth').style.display = 'flex';
@@ -1118,6 +1128,7 @@
 
         const story = userStories[currentStoryIdx];
         const user = db.users.find(u => u.id === currentStoryUser);
+        if (!user) { closeStory(); return; }
         
         document.getElementById('storyViewerAv').innerHTML = getAvatarHtml(user.avatarType, user.avatarValue);
         document.getElementById('storyViewerName').textContent = user.name;
@@ -1674,22 +1685,46 @@
         }
     }
 
+    // ИСПРАВЛЕНИЕ 2: Улучшенная функция для видеокружков с UI-превью
     function toggleVideoCircle() {
         if (!activeChat) return;
         const btn = document.getElementById('btn-circle');
+        const previewContainer = document.getElementById('video-circle-preview-container');
+        const previewVideo = document.getElementById('video-circle-preview');
+
         if (isRecordingVideo) {
-            mediaRecorder.stop(); isRecordingVideo = false; btn.classList.remove('recording-pulse');
+            mediaRecorder.stop(); 
+            isRecordingVideo = false; 
+            btn.classList.remove('recording-pulse');
+            
+            // Скрываем и очищаем превью при остановке
+            previewContainer.style.display = 'none';
+            if (previewVideo.srcObject) {
+                previewVideo.srcObject.getTracks().forEach(t => t.stop());
+            }
+            previewVideo.srcObject = null;
         } else {
             if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
                 navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: true }).then(stream => {
-                    isRecordingVideo = true; btn.classList.add('recording-pulse');
+                    isRecordingVideo = true; 
+                    btn.classList.add('recording-pulse');
+                    
+                    // Показываем превью во время записи
+                    previewVideo.srcObject = stream;
+                    previewContainer.style.display = 'block';
+
                     let options = undefined;
                     if (MediaRecorder.isTypeSupported('video/webm')) options = { mimeType: 'video/webm' };
                     else if (MediaRecorder.isTypeSupported('video/mp4')) options = { mimeType: 'video/mp4' };
                     mediaRecorder = new MediaRecorder(stream, options);
                     recordedChunks = [];
                     mediaRecorder.ondataavailable = e => recordedChunks.push(e.data);
+                    
                     mediaRecorder.onstop = async () => {
+                        // Скрываем окно превью, когда запись успешно завершилась
+                        previewContainer.style.display = 'none';
+                        previewVideo.srcObject = null;
+
                         const finalMime = mediaRecorder.mimeType || 'video/mp4';
                         const ext = finalMime.includes('mp4') ? 'mp4' : 'webm';
                         const blob = new Blob(recordedChunks, { type: finalMime });
@@ -1705,12 +1740,13 @@
                                 if (!db.chats[chatIndex].msgs) db.chats[chatIndex].msgs = [];
                                 db.chats[chatIndex].msgs.push(msgObj);
                                 rtdb.ref(`/dg_app_data/chats/${chatIndex}/msgs`).set(db.chats[chatIndex].msgs);
+                                renderMsgs();
                             }
                         }
                         stream.getTracks().forEach(t => t.stop());
                     };
                     mediaRecorder.start();
-                }).catch(() => alert("Нет доступа к камере или микрофону"));
+                }).catch((e) => alert("Нет доступа к камере или микрофону: " + e.message));
             } else { alert("Браузер не поддерживает запись видео"); }
         }
     }
@@ -1833,8 +1869,8 @@
     function deleteChat() { if (!confirm('Точно удалить для всех?')) return; db.chats = db.chats.filter(c => c.id !== activeChat.id); rtdb.ref('/dg_app_data/chats').set(db.chats); closeProfileModal(); closeChat(); }
     function leaveChat() { if (!confirm('Покинуть чат?')) return; activeChat.members = activeChat.members.filter(id => id !== me.id); const chatIndex = db.chats.findIndex(c => c.id === activeChat.id); if(chatIndex > -1) rtdb.ref(`/dg_app_data/chats/${chatIndex}/members`).set(db.chats[chatIndex].members); closeProfileModal(); closeChat(); }
     function closeChat() { document.getElementById('chat-window').classList.remove('active'); activeChat = null; document.getElementById('chat-search-bar').style.display = 'none'; renderChats(); }
-    function applyTheme(t) { localSettings.theme = t; localStorage.setItem('DG_Settings', JSON.stringify(localSettings)); const colors = { blue: '#007aff', purple: '#a855f7', green: '#30d158', ghost: '#8e8e8e' }; document.documentElement.style.setProperty('--p', colors[t] || '#007aff'); document.querySelectorAll('.t-dot').forEach(d => d.classList.remove('active')); const dot = document.getElementById('dot-' + t); if (dot) dot.classList.add('active'); }
-    function toggleLightMode() { localSettings.lightMode = !localSettings.lightMode; localStorage.setItem('DG_Settings', JSON.stringify(localSettings)); if (localSettings.lightMode) { document.documentElement.setAttribute('data-theme', 'light'); document.getElementById('themeIcon').textContent = '🌙'; } else { document.documentElement.removeAttribute('data-theme'); document.getElementById('themeIcon').textContent = '☀️'; } }
+    function applyTheme(t) { localSettings.theme = t; localStorage.setItem('Nexagram_Settings', JSON.stringify(localSettings)); const colors = { blue: '#007aff', purple: '#a855f7', green: '#30d158', ghost: '#8e8e8e' }; document.documentElement.style.setProperty('--p', colors[t] || '#007aff'); document.querySelectorAll('.t-dot').forEach(d => d.classList.remove('active')); const dot = document.getElementById('dot-' + t); if (dot) dot.classList.add('active'); }
+    function toggleLightMode() { localSettings.lightMode = !localSettings.lightMode; localStorage.setItem('Nexagram_Settings', JSON.stringify(localSettings)); if (localSettings.lightMode) { document.documentElement.setAttribute('data-theme', 'light'); document.getElementById('themeIcon').textContent = '🌙'; } else { document.documentElement.removeAttribute('data-theme'); document.getElementById('themeIcon').textContent = '☀️'; } }
     function updUI() { if (!me) return; document.getElementById('p-name').textContent = me.name; document.getElementById('p-log').textContent = '@' + me.login; renderAvatar(document.getElementById('p-av'), me.avatarType, me.avatarValue); if (me.login === 'helper') { document.getElementById('admin-switch-btn').style.display = 'flex'; document.getElementById('admin-panel-btn').style.display = 'flex'; } else { document.getElementById('admin-switch-btn').style.display = 'none'; document.getElementById('admin-panel-btn').style.display = 'none'; } }
     function setTab(tab) { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active')); document.getElementById(tab + '-screen').classList.add('active'); document.getElementById('nb-' + tab).classList.add('active'); if (tab === 'friends') renderFriends(); if (tab === 'chats') renderChats(); }
     function addFriend() { if (!me) return; const login = prompt("Введите логин пользователя:").trim(); if (!login) return; if (login.toLowerCase() === me.login) return alert("Нельзя добавить себя"); let friend = db.users.find(u => u.login === login.toLowerCase()); if (!friend) return alert("Пользователь не найден в БД"); if (!me.friends.includes(friend.id)) { me.friends.push(friend.id); const uIdx = db.users.findIndex(u => u.id === me.id); if (uIdx > -1) rtdb.ref(`/dg_app_data/users/${uIdx}/friends`).set(me.friends); renderFriends(); alert("Добавлен!"); } else { alert("Уже в списке"); } }
@@ -1864,7 +1900,7 @@
     function selectAvatar(type, value) { me.avatarType = type; me.avatarValue = value; const uIdx = db.users.findIndex(u => u.id === me.id); if (uIdx > -1) { rtdb.ref(`/dg_app_data/users/${uIdx}/avatarType`).set(me.avatarType); rtdb.ref(`/dg_app_data/users/${uIdx}/avatarValue`).set(me.avatarValue); } updUI(); closeAvatarModal(); renderChats(); renderFriends(); }
     function selectAvatarFromUrl() { const url = prompt('Прямая ссылка:'); if (url && url.trim()) selectAvatar('url', url.trim()); }
     function closeAvatarModal() { document.getElementById('avatarModal').classList.remove('active'); }
-    function resetAllData() { if (confirm("Внимание! Это очистит только твои локальные настройки. База останется на сервере.")) { localStorage.removeItem('DG_Settings'); localStorage.removeItem('DG_Session_UID'); location.reload(); } }
+    function resetAllData() { if (confirm("Внимание! Это очистит только твои локальные настройки. База останется на сервере.")) { localStorage.removeItem('Nexagram_Settings'); localStorage.removeItem('Nexagram_Session_UID'); location.reload(); } }
 </script>
 </body>
 </html>
