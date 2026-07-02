@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
@@ -11,11 +11,11 @@
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         :root {
             --bg: #000000; --card: #121212; --in: #1c1c1c; --brd: #262626;
-            --txt: #ffffff; --mut: #8e8e8e; --p: #007aff; --red: #ff3b30; --online: #30d158;
+            --txt: #ffffff; --mut: #8e8e8e; --p: #30d158; --red: #ff3b30; --online: #30d158;
         }
         [data-theme="light"] {
             --bg: #f8f9fa; --card: #ffffff; --in: #f1f3f5; --brd: #e0e0e0;
-            --txt: #1a1a1a; --mut: #666666; --p: #007aff;
+            --txt: #1a1a1a; --mut: #666666; --p: #30d158;
         }
         body { background: var(--bg); color: var(--txt); height: 100vh; overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', Roboto, Arial, sans-serif; }
         #app { display: none; width: 100%; height: 100%; flex-direction: column; }
@@ -136,7 +136,7 @@
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
         .auth-container { width: 100%; max-width: 340px; text-align: center; animation: fadeIn 0.5s ease; }
-        .brand-square { display: inline-block; background: var(--p, #a855f7); padding: 16px 28px; border-radius: 24px; font-size: 32px; font-weight: 800; letter-spacing: -1px; color: white; box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4); margin-bottom: 12px; }
+        .brand-square { display: inline-block; background: var(--p, #30d158); padding: 16px 28px; border-radius: 24px; font-size: 32px; font-weight: 800; letter-spacing: -1px; color: white; box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4); margin-bottom: 12px; }
         .auth-subtitle { color: var(--mut); font-size: 15px; margin-bottom: 32px; letter-spacing: 0.5px; }
         .auth-input { width: 100%; padding: 16px; background: #111; border: 1px solid #333; color: #fff; border-radius: 16px; margin-bottom: 12px; font-size: 16px; outline: none; transition: all 0.2s; }
         .auth-input:focus { border-color: var(--p); background: #1a1a1a; }
@@ -218,7 +218,7 @@
         
         #remoteVideo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: -2; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
         #remoteVideo.active-video { opacity: 1; pointer-events: auto; }
-        #localVideo { position: absolute; top: calc(20px + env(safe-area-inset-top)); right: 20px; width: 100px; height: 140px; border-radius: 12px; object-fit: cover; border: 2px solid var(--p); z-index: 10; display: none; background: #000; }
+        #localVideo { position: absolute; top: calc(20px + env(safe-area-inset-top)); right: 20px; width: 100px; height: 140px; border-radius: 12px; object-fit: cover; border: 2px solid var(--p); z-index: 10; display: none; background: #000; transform: scaleX(-1); } /* Зеркальное отражение себя */
         
         .call-ui-top { position: relative; z-index: 5; margin-top: 20px; }
 
@@ -245,7 +245,7 @@
         "display": "standalone",
         "background_color": "#000000",
         "theme_color": "#000000",
-        "icons": [{ "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSI1MCIgZmlsbD0iIzAwN2FmZiIvPjx0ZXh0IHg9IjUwIiB5PSI1NSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE0IiBmb250LXdlaWdodD0iYm9sZCIgZmlsbD0id2hpdGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiPk5leGFncmFtPC90ZXh0Pjwvc3ZnPg==", "sizes": "512x512", "type": "image/svg+xml" }]
+        "icons": [{ "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSI1MCIgZmlsbD0iIzMwZDE1OCIvPjx0ZXh0IHg9IjUwIiB5PSI1NSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE0IiBmb250LXdlaWdodD0iYm9sZCIgZmlsbD0id2hpdGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiPk5leGFncmFtPC90ZXh0Pjwvc3ZnPg==", "sizes": "512x512", "type": "image/svg+xml" }]
     };
     const manifestUrl = 'data:application/manifest+json;charset=utf-8,' + encodeURIComponent(JSON.stringify(pwaManifest));
     document.head.insertAdjacentHTML('beforeend', `<link rel="manifest" href="${manifestUrl}">`);
@@ -373,7 +373,6 @@
 
         <div class="msgs" id="m-area"></div>
 
-        <!-- Контейнер для предпросмотра видеокружка -->
         <div id="video-circle-preview-container" style="display:none; position:absolute; bottom: 80px; right: 16px; width: 140px; height: 140px; border-radius: 50%; overflow: hidden; border: 3px solid var(--p); z-index: 1000; background: #000; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
             <video id="video-circle-preview" autoplay playsinline muted style="width:100%; height:100%; object-fit:cover; transform: scaleX(-1);"></video>
         </div>
@@ -472,13 +471,11 @@
         </div>
     </div>
 </div>
-<audio id="remoteAudio" autoplay playsinline></audio>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 
 <script>
-    // ИСПРАВЛЕНИЕ 1: Явно объявляем глобальные переменные для историй, чтобы избежать ReferenceError в строгом режиме
     let currentStoryUser = null;
     let currentStoryIdx = 0;
     let storyTimerId = null;
@@ -517,7 +514,8 @@
         return 'file';
     }
     
-    let localSettings = JSON.parse(localStorage.getItem('Nexagram_Settings')) || { theme: 'blue', lightMode: false };
+    // ИСПРАВЛЕНИЕ 1: Тема по умолчанию - 'green'
+    let localSettings = JSON.parse(localStorage.getItem('Nexagram_Settings')) || { theme: 'green', lightMode: false };
     let db = { users: [], chats: [], stories: [] };
     let me = null;
     let activeChat = null;
@@ -543,7 +541,15 @@
     let isCallMicMuted = false;
     let isCallCamOff = false;
     let isSpeakerOn = true;
-    const rtcConfig = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
+    
+    // ИСПРАВЛЕНИЕ 2: Улучшенные STUN-серверы для надежного соединения
+    const rtcConfig = { 
+        iceServers: [
+            { urls: 'stun:stun.l.google.com:19302' },
+            { urls: 'stun:stun1.l.google.com:19302' },
+            { urls: 'stun:stun.cloudflare.com:3478' }
+        ] 
+    };
 
     document.getElementById('loader').style.display = 'flex';
     
@@ -607,14 +613,13 @@
         alert("Ошибка подключения к серверу: " + error.message);
     });
 
-    // 🚀 ЗАЩИТА ОТ БЕСКОНЕЧНОГО ЦИКЛА
     function markChatAsReadLocally() {
         if (!activeChat || !me) return;
         const chatIndex = db.chats.findIndex(c => c.id === activeChat.id);
         if (chatIndex > -1) {
             const currentRead = (activeChat.lastRead && activeChat.lastRead[me.id]) || 0;
             const lastMsg = activeChat.msgs && activeChat.msgs.length > 0 ? activeChat.msgs[activeChat.msgs.length - 1] : null;
-            if (!lastMsg || currentRead >= lastMsg.time) return; // Обновляем только если есть что-то новое
+            if (!lastMsg || currentRead >= lastMsg.time) return; 
             rtdb.ref(`/dg_app_data/chats/${chatIndex}/lastRead/${me.id}`).set(Date.now());
         }
     }
@@ -763,7 +768,6 @@
         document.getElementById('localVideo').style.display = 'none';
         document.getElementById('remoteVideo').classList.remove('active-video');
         document.getElementById('remoteVideo').srcObject = null;
-        document.getElementById('remoteAudio').srcObject = null;
         document.getElementById('callUiTop').style.display = 'block'; 
         inRing.pause(); inRing.currentTime = 0;
         outRing.pause(); outRing.currentTime = 0;
@@ -803,16 +807,29 @@
             }
             peerConnection = new RTCPeerConnection(rtcConfig);
             localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+            
+            // ИСПРАВЛЕНИЕ 3: Все входящие потоки направляются в один элемент remoteVideo для предотвращения багов с медиа
             peerConnection.ontrack = event => { 
-                if (event.track.kind === 'video') {
-                    const rVid = document.getElementById('remoteVideo');
-                    rVid.srcObject = event.streams[0];
-                    rVid.classList.add('active-video');
-                    document.getElementById('callUiTop').style.display = 'none'; 
-                } else {
-                    document.getElementById('remoteAudio').srcObject = event.streams[0]; 
+                const rVid = document.getElementById('remoteVideo');
+                const stream = event.streams[0] || new MediaStream([event.track]);
+                
+                if (rVid.srcObject !== stream) {
+                    rVid.srcObject = stream;
                 }
+                
+                // Делаем видео видимым, только если собеседник отправил видео-трек
+                const checkVideo = () => {
+                    if (stream.getVideoTracks().length > 0) {
+                        rVid.classList.add('active-video');
+                        document.getElementById('callUiTop').style.display = 'none';
+                    }
+                };
+                stream.addEventListener('addtrack', checkVideo);
+                checkVideo();
+                
+                rVid.play().catch(e => console.warn('Playback prevented', e));
             };
+
             peerConnection.onicecandidate = event => {
                 if (event.candidate) rtdb.ref(`/dg_calls/${currentCallId}/callerIce`).push(event.candidate.toJSON());
             };
@@ -864,16 +881,28 @@
             }
             peerConnection = new RTCPeerConnection(rtcConfig);
             localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+            
+            // ИСПРАВЛЕНИЕ 3 (Продолжение)
             peerConnection.ontrack = event => { 
-                if (event.track.kind === 'video') {
-                    const rVid = document.getElementById('remoteVideo');
-                    rVid.srcObject = event.streams[0];
-                    rVid.classList.add('active-video');
-                    document.getElementById('callUiTop').style.display = 'none';
-                } else {
-                    document.getElementById('remoteAudio').srcObject = event.streams[0]; 
+                const rVid = document.getElementById('remoteVideo');
+                const stream = event.streams[0] || new MediaStream([event.track]);
+                
+                if (rVid.srcObject !== stream) {
+                    rVid.srcObject = stream;
                 }
+                
+                const checkVideo = () => {
+                    if (stream.getVideoTracks().length > 0) {
+                        rVid.classList.add('active-video');
+                        document.getElementById('callUiTop').style.display = 'none';
+                    }
+                };
+                stream.addEventListener('addtrack', checkVideo);
+                checkVideo();
+                
+                rVid.play().catch(e => console.warn('Playback prevented', e));
             };
+
             peerConnection.onicecandidate = event => {
                 if (event.candidate) rtdb.ref(`/dg_calls/${currentCallId}/calleeIce`).push(event.candidate.toJSON());
             };
@@ -944,11 +973,9 @@
     function toggleCallSpeaker() {
         isSpeakerOn = !isSpeakerOn;
         updateCallButtons();
-        const rAudio = document.getElementById('remoteAudio');
         const rVideo = document.getElementById('remoteVideo');
-        if (typeof rAudio.setSinkId === 'function') {
+        if (typeof rVideo.setSinkId === 'function') {
             const targetSink = isSpeakerOn ? 'default' : ''; 
-            rAudio.setSinkId(targetSink).catch(e => console.log(e));
             rVideo.setSinkId(targetSink).catch(e => console.log(e));
         }
     }
@@ -1042,7 +1069,8 @@
         if (localSettings.lightMode) { document.documentElement.setAttribute('data-theme', 'light'); document.getElementById('themeIcon').textContent = '🌙'; } 
         else { document.documentElement.removeAttribute('data-theme'); document.getElementById('themeIcon').textContent = '☀️'; }
         
-        applyTheme(localSettings.theme || 'blue');
+        // Применяем зеленую тему, если ничего не выбрано
+        applyTheme(localSettings.theme || 'green');
         updUI(); renderFriends(); renderChats(); renderStories();
         listenForIncomingCalls(); 
         document.getElementById('passwordInput').value = '';
@@ -1593,7 +1621,6 @@
         area.scrollTop = area.scrollHeight;
     }
 
-    // 🚀 ИСПРАВЛЕНИЕ: ДОБАВЛЕН БЕЗОПАСНЫЙ ОТВЕТ ВО ВСЕ ФУНКЦИИ ОТПРАВКИ
     function send() {
         const inp = document.getElementById('m-in');
         if (!inp.value.trim() || !activeChat) return;
@@ -1685,7 +1712,6 @@
         }
     }
 
-    // ИСПРАВЛЕНИЕ 2: Улучшенная функция для видеокружков с UI-превью
     function toggleVideoCircle() {
         if (!activeChat) return;
         const btn = document.getElementById('btn-circle');
@@ -1697,7 +1723,6 @@
             isRecordingVideo = false; 
             btn.classList.remove('recording-pulse');
             
-            // Скрываем и очищаем превью при остановке
             previewContainer.style.display = 'none';
             if (previewVideo.srcObject) {
                 previewVideo.srcObject.getTracks().forEach(t => t.stop());
@@ -1709,7 +1734,6 @@
                     isRecordingVideo = true; 
                     btn.classList.add('recording-pulse');
                     
-                    // Показываем превью во время записи
                     previewVideo.srcObject = stream;
                     previewContainer.style.display = 'block';
 
@@ -1721,7 +1745,6 @@
                     mediaRecorder.ondataavailable = e => recordedChunks.push(e.data);
                     
                     mediaRecorder.onstop = async () => {
-                        // Скрываем окно превью, когда запись успешно завершилась
                         previewContainer.style.display = 'none';
                         previewVideo.srcObject = null;
 
@@ -1869,7 +1892,7 @@
     function deleteChat() { if (!confirm('Точно удалить для всех?')) return; db.chats = db.chats.filter(c => c.id !== activeChat.id); rtdb.ref('/dg_app_data/chats').set(db.chats); closeProfileModal(); closeChat(); }
     function leaveChat() { if (!confirm('Покинуть чат?')) return; activeChat.members = activeChat.members.filter(id => id !== me.id); const chatIndex = db.chats.findIndex(c => c.id === activeChat.id); if(chatIndex > -1) rtdb.ref(`/dg_app_data/chats/${chatIndex}/members`).set(db.chats[chatIndex].members); closeProfileModal(); closeChat(); }
     function closeChat() { document.getElementById('chat-window').classList.remove('active'); activeChat = null; document.getElementById('chat-search-bar').style.display = 'none'; renderChats(); }
-    function applyTheme(t) { localSettings.theme = t; localStorage.setItem('Nexagram_Settings', JSON.stringify(localSettings)); const colors = { blue: '#007aff', purple: '#a855f7', green: '#30d158', ghost: '#8e8e8e' }; document.documentElement.style.setProperty('--p', colors[t] || '#007aff'); document.querySelectorAll('.t-dot').forEach(d => d.classList.remove('active')); const dot = document.getElementById('dot-' + t); if (dot) dot.classList.add('active'); }
+    function applyTheme(t) { localSettings.theme = t; localStorage.setItem('Nexagram_Settings', JSON.stringify(localSettings)); const colors = { blue: '#007aff', purple: '#a855f7', green: '#30d158', ghost: '#8e8e8e' }; document.documentElement.style.setProperty('--p', colors[t] || '#30d158'); document.querySelectorAll('.t-dot').forEach(d => d.classList.remove('active')); const dot = document.getElementById('dot-' + t); if (dot) dot.classList.add('active'); }
     function toggleLightMode() { localSettings.lightMode = !localSettings.lightMode; localStorage.setItem('Nexagram_Settings', JSON.stringify(localSettings)); if (localSettings.lightMode) { document.documentElement.setAttribute('data-theme', 'light'); document.getElementById('themeIcon').textContent = '🌙'; } else { document.documentElement.removeAttribute('data-theme'); document.getElementById('themeIcon').textContent = '☀️'; } }
     function updUI() { if (!me) return; document.getElementById('p-name').textContent = me.name; document.getElementById('p-log').textContent = '@' + me.login; renderAvatar(document.getElementById('p-av'), me.avatarType, me.avatarValue); if (me.login === 'helper') { document.getElementById('admin-switch-btn').style.display = 'flex'; document.getElementById('admin-panel-btn').style.display = 'flex'; } else { document.getElementById('admin-switch-btn').style.display = 'none'; document.getElementById('admin-panel-btn').style.display = 'none'; } }
     function setTab(tab) { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active')); document.getElementById(tab + '-screen').classList.add('active'); document.getElementById('nb-' + tab).classList.add('active'); if (tab === 'friends') renderFriends(); if (tab === 'chats') renderChats(); }
